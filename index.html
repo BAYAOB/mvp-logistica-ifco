@@ -6,7 +6,7 @@
     <title>MVP Logística - Controle de Pátio IFCO</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca de Leitura de Câmera (Para o Romaneio) -->
+    <!-- Biblioteca de Leitura de Câmera -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- Firebase SDK -->
     <script type="module">
@@ -62,7 +62,7 @@
             <h2 class="text-xl font-semibold text-slate-700">Controle de Atendimento</h2>
             <p class="text-sm text-slate-500">Selecione o seu perfil de acesso:</p>
             
-            <button onclick="entrarFaturista()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">💻 1. Faturamento (Mesa - Scanner)</button>
+            <button onclick="entrarFaturista()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">💻 1. Faturamento (Mesa - Scanner/Teclado)</button>
             <button onclick="mudarPerfil('expedicao')" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">📦 2. Expedição / Pátio (Celular)</button>
             <button onclick="solicitarSenhaGestao()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 rounded-lg transition text-sm shadow">📊 3. Painel de Gestão (Dados)</button>
         </section>
@@ -71,12 +71,12 @@
         <section id="screen-faturista-pedido" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4 text-center">
             <div class="bg-green-50 p-3 rounded-lg border border-green-200">
                 <span class="text-xs font-bold text-ifco-green uppercase tracking-wide">Passo 1 de 2</span>
-                <h2 class="text-lg font-bold text-slate-800">Bipe o Recibo / Pedido</h2>
+                <h2 class="text-lg font-bold text-slate-800">Bipe ou Digite o Pedido</h2>
             </div>
-            <p class="text-sm text-slate-600">O campo está focado. Apenas bipar com a pistola!</p>
+            <p class="text-sm text-slate-600">Pressione <b>Enter</b> após digitar ou bipar.</p>
             
             <form onsubmit="faturistaCheckin(event)">
-                <input type="text" id="input-fatura-pedido" placeholder="Aguardando scanner do pedido..." class="w-full p-4 border-2 border-ifco-green rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition">
+                <input type="text" id="input-fatura-pedido" placeholder="Nº do pedido..." class="w-full p-4 border-2 border-ifco-green rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition" autocomplete="off">
             </form>
             <button onclick="voltarHome()" class="w-full text-slate-400 py-2 text-xs">Cancelar / Voltar ao Menu</button>
         </section>
@@ -85,26 +85,25 @@
         <section id="screen-faturista-nf" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4 text-center">
             <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <span class="text-xs font-bold text-blue-600 uppercase tracking-wide">Passo 2 de 2</span>
-                <h2 class="text-lg font-bold text-slate-800">Bipe a Nota Fiscal (NF)</h2>
+                <h2 class="text-lg font-bold text-slate-800">Bipe ou Digite a Nota Fiscal</h2>
             </div>
             <p class="text-sm text-slate-600">Pedido atual: <span id="lbl-pedido-ativo" class="font-bold text-slate-800"></span></p>
+            <p class="text-xs text-slate-400">Pressione <b>Enter</b> para finalizar o faturamento.</p>
             
             <form onsubmit="faturistaFinalizarNF(event)">
-                <input type="text" id="input-fatura-nf" placeholder="Aguardando scanner da NF..." class="w-full p-4 border-2 border-blue-600 rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition">
+                <input type="text" id="input-fatura-nf" placeholder="Nº da NF..." class="w-full p-4 border-2 border-blue-600 rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition" autocomplete="off">
             </form>
             <button onclick="voltarHome()" class="w-full text-slate-400 py-2 text-xs">Cancelar / Voltar ao Menu</button>
         </section>
 
-        <!-- TELA 2: EXPEDIÇÃO (ROMANEIO POR CÂMERA + FOTO DA NF COMO FIM) -->
+        <!-- TELA 2: EXPEDIÇÃO (ROMANEIO POR CÂMERA + FOTO DA NF) -->
         <section id="screen-expedicao" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
             <h2 class="text-lg font-bold text-ifco-green">Expedição - Pátio (Celular)</h2>
             <p class="text-sm text-slate-600">Gerencie a separação e a dupla conferência:</p>
             
             <div class="space-y-3">
-                <!-- Botão 1: Ler Romaneio com Câmera -->
                 <button onclick="iniciarLeituraRomaneio()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg text-sm shadow">📷 1. Ler QR Code do Romaneio (Início)</button>
                 
-                <!-- Botão 2: Tirar Foto da NF (Fim e Dupla Conferência) -->
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center space-y-2">
                     <span class="text-xs font-bold text-blue-600 uppercase">2. Fim de Carga & Dupla Conferência</span>
                     <p class="text-xs text-slate-600">Tire uma foto da Nota Fiscal para comprovar a conferência e finalizar:</p>
@@ -201,7 +200,7 @@
             document.getElementById('status-expedicao').innerHTML = '';
         }
 
-        // --- FLUXO FATURISTA (ENTER AUTOMÁTICO) ---
+        // --- FLUXO FATURISTA (ENTER DE TECLADO OU SCANNER) ---
         function entrarFaturista() {
             pararCameras();
             document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
@@ -334,7 +333,6 @@
                 return; 
             }
 
-            // Registra o fim do carregamento e guarda a confirmação da dupla conferência via foto
             const docRef = window.doc(window.db, "atendimentos", docId);
             await window.updateDoc(docRef, {
                 status: 'AGUARDANDO_AVALIACAO',
@@ -344,7 +342,6 @@
 
             alert('📸 Foto da NF capturada! Dupla conferência registrada com sucesso.');
 
-            // Abre a tela de avaliação direto para o cliente
             document.getElementById('atendimento-id-atual').value = docId;
             document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('screen-avaliacao').classList.remove('hidden');
