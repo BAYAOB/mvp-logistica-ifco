@@ -6,7 +6,7 @@
     <title>MVP Logística - Controle de Pátio IFCO</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca de Leitura de Câmera -->
+    <!-- Biblioteca de Leitura de Câmera (Apenas para o Operador) -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- Firebase SDK -->
     <script type="module">
@@ -20,7 +20,7 @@
             projectId: "SEU_PROJETO_ID",
             storageBucket: "SEU_PROJETO.appspot.com",
             messagingSenderId: "SEU_SENDER_ID",
-            appId: "SEU_APP_ID"
+            appId: "SUA_APP_ID"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -62,52 +62,51 @@
             <h2 class="text-xl font-semibold text-slate-700">Controle de Atendimento</h2>
             <p class="text-sm text-slate-500">Selecione o seu perfil de acesso:</p>
             
-            <button onclick="entrarFaturista()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">💻 1. Faturamento (Mesa)</button>
+            <button onclick="mudarPerfil('faturista')" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">💻 1. Faturamento (PC / Mesa com Scanner)</button>
             <button onclick="mudarPerfil('expedicao')" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">📦 2. Expedição / Pátio (Celular)</button>
             <button onclick="solicitarSenhaGestao()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 rounded-lg transition text-sm shadow">📊 3. Painel de Gestão (Dados)</button>
         </section>
 
-        <!-- TELA 1: FATURISTA (TELA ÚNICA COM OS DOIS CAMPOS) -->
+        <!-- TELA 1: FATURISTA (COM CAMPOS PARA PISTOLA SCANNER) -->
         <section id="screen-faturista" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
-            <div class="bg-green-50 p-3 rounded-lg border border-green-200 text-center">
-                <span class="text-xs font-bold text-ifco-green uppercase tracking-wide">Módulo Faturamento</span>
-                <h2 class="text-md font-bold text-slate-800">Registro de Pedido & NF</h2>
-            </div>
-
-            <div class="space-y-3">
-                <!-- Campo 1: Pedido -->
+            <h2 class="text-lg font-bold text-ifco-green">Faturamento - Mesa</h2>
+            <p class="text-sm text-slate-600">Utilize a pistola leitora USB nos campos abaixo:</p>
+            
+            <div class="space-y-4 bg-slate-50 p-4 rounded-lg border">
+                <!-- Passo 1: Leitura do Pedido -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">1. Nº do Pedido (Início)</label>
-                    <input type="text" id="input-fatura-pedido" placeholder="Bipe ou digite o pedido e dê Enter..." class="w-full p-3 border-2 border-ifco-green rounded-xl text-sm font-bold outline-none bg-slate-50 focus:bg-white transition" autocomplete="off">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">1. Bipar QR Code do Recibo (Início)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="input-fatura-pedido" placeholder="Bipe ou digite o nº do pedido..." class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-ifco-green bg-white">
+                        <button onclick="faturistaCheckin()" class="bg-ifco-green text-white px-4 rounded-lg text-xs font-bold hover:bg-ifco-dark">OK</button>
+                    </div>
                 </div>
 
-                <!-- Campo 2: Nota Fiscal -->
+                <hr>
+
+                <!-- Passo 2: Leitura da NF -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">2. Nº da Nota Fiscal - NF (Fim Faturamento)</label>
-                    <input type="text" id="input-fatura-nf" placeholder="Bipe ou digite a NF..." class="w-full p-3 border-2 border-blue-600 rounded-xl text-sm font-bold outline-none bg-slate-50 focus:bg-white transition" autocomplete="off">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">2. Bipar Código de Barras da NF (Finalizar)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="input-fatura-nf" placeholder="Bipe ou digite a NF gerada..." class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-ifco-green bg-white">
+                        <button onclick="faturistaFinalizarNF()" class="bg-blue-600 text-white px-4 rounded-lg text-xs font-bold hover:bg-blue-700">Salvar NF</button>
+                    </div>
                 </div>
             </div>
 
             <div id="status-faturista" class="text-xs text-center text-ifco-green font-medium p-1"></div>
 
-            <button onclick="faturistaFinalizar()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-sm shadow">💾 Finalizar Atendimento</button>
-            <button onclick="voltarHome()" class="w-full text-slate-400 py-2 text-xs">Voltar ao Menu</button>
+            <button onclick="voltarHome()" class="w-full text-slate-500 py-2 text-sm mt-4">Voltar ao Menu</button>
         </section>
 
-        <!-- TELA 2: EXPEDIÇÃO (ROMANEIO POR CÂMERA + FOTO DA NF) -->
+        <!-- TELA 2: EXPEDIÇÃO (COM CÂMERA DO CELULAR) -->
         <section id="screen-expedicao" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
             <h2 class="text-lg font-bold text-ifco-green">Expedição - Pátio (Celular)</h2>
-            <p class="text-sm text-slate-600">Gerencie a separação e a dupla conferência:</p>
+            <p class="text-sm text-slate-600">Use a câmera para bipar o Romaneio e a NF:</p>
             
             <div class="space-y-3">
-                <button onclick="iniciarLeituraRomaneio()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg text-sm shadow">📷 1. Ler QR Code do Romaneio (Início)</button>
-                
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center space-y-2">
-                    <span class="text-xs font-bold text-blue-600 uppercase">2. Fim de Carga & Dupla Conferência</span>
-                    <p class="text-xs text-slate-600">Tire uma foto da Nota Fiscal para comprovar a conferência e finalizar:</p>
-                    <input type="file" id="camera-nf-input" accept="image/*" capture="environment" class="hidden" onchange="processarFotoNF(event)">
-                    <button onclick="dispararCameraNF()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-sm shadow">📸 Tirar Foto da NF Física</button>
-                </div>
+                <button onclick="iniciarLeituraExpedicao('romaneio')" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg text-sm shadow">📷 1. Ler QR Code do Romaneio (Início Separação)</button>
+                <button onclick="iniciarLeituraExpedicao('fim_carga')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-sm shadow">📷 2. Ler NF (Fim do Carregamento)</button>
             </div>
 
             <div id="reader-expedicao" class="w-full rounded-lg overflow-hidden border mt-2"></div>
@@ -164,7 +163,6 @@
     <script>
         let activeScanner = null;
         let dadosGlobaisGestao = [];
-        let idAtendimentoFaturando = null;
 
         function mudarPerfil(perfil) {
             pararCameras();
@@ -197,112 +195,59 @@
             document.getElementById('status-expedicao').innerHTML = '';
         }
 
-        // --- FLUXO FATURISTA (TELA ÚNICA COM ENTER INTELIGENTE) ---
-        function entrarFaturista() {
-            pararCameras();
-            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById('screen-faturista').classList.remove('hidden');
-            document.getElementById('role-badge').innerText = 'Faturista';
-
-            document.getElementById('input-fatura-pedido').value = '';
-            document.getElementById('input-fatura-nf').value = '';
-            document.getElementById('status-faturista').innerText = '';
-            idAtendimentoFaturando = null;
-
-            setTimeout(() => {
-                document.getElementById('input-fatura-pedido').focus();
-            }, 100);
-        }
-
-        // Enter no campo Pedido: Registra início e pula para NF
-        document.getElementById('input-fatura-pedido').addEventListener('keypress', async function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const pedido = this.value.trim();
-                if (!pedido) { alert("Digite ou bipe o número do pedido!"); return; }
-                if (!window.db) { alert('Firebase não configurado!'); return; }
-
-                try {
-                    const docRef = await window.addDoc(window.collection(window.db, "atendimentos"), {
-                        pedidoId: pedido,
-                        status: 'INICIADO_FATURAMENTO',
-                        horaInicioFaturamento: new Date().toISOString(),
-                        romaneioId: 'ROM-' + Math.floor(1000 + Math.random() * 9000),
-                        nfId: null
-                    });
-
-                    idAtendimentoFaturando = docRef.id;
-                    document.getElementById('status-faturista').innerText = `✅ Pedido ${pedido} registrado! Agora informe a NF.`;
-                    document.getElementById('input-fatura-nf').focus();
-                } catch (err) {
-                    console.error(err);
-                    alert("Erro ao gravar no Firebase.");
-                }
-            }
-        });
-
-        // Enter no campo NF: Marca tempo de faturamento e conclui o balcão
-        document.getElementById('input-fatura-nf').addEventListener('keypress', async function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                faturistaFinalizar();
-            }
-        });
-
-        async function faturistaFinalizar() {
-            const nf = document.getElementById('input-fatura-nf').value.trim();
+        // --- MÓDULO FATURISTA (VIA SCANNER USB / DIGITAÇÃO) ---
+        async function faturistaCheckin() {
             const pedido = document.getElementById('input-fatura-pedido').value.trim();
-
-            if (!pedido) {
-                alert("Informe o pedido primeiro!");
-                document.getElementById('input-fatura-pedido').focus();
-                return;
-            }
-            if (!nf) {
-                alert("Informe o número da Nota Fiscal!");
-                document.getElementById('input-fatura-nf').focus();
-                return;
-            }
-            if (!window.db) return;
+            if (!pedido) { alert("Bipe ou digite o número do pedido!"); return; }
+            if (!window.db) { alert('Firebase não configurado!'); return; }
 
             try {
-                // Se o faturista digitou tudo direto e deu enter direto no final sem passar pelo evento do pedido
-                if (!idAtendimentoFaturando) {
-                    const docRef = await window.addDoc(window.collection(window.db, "atendimentos"), {
-                        pedidoId: pedido,
-                        status: 'AGUARDANDO_EXPEDICAO',
-                        horaInicioFaturamento: new Date().toISOString(),
-                        horaFimFaturamento: new Date().toISOString(),
-                        romaneioId: 'ROM-' + Math.floor(1000 + Math.random() * 9000),
-                        nfId: nf
-                    });
-                } else {
-                    const docRef = window.doc(window.db, "atendimentos", idAtendimentoFaturando);
-                    await window.updateDoc(docRef, {
-                        nfId: nf,
-                        status: 'AGUARDANDO_EXPEDICAO',
-                        horaFimFaturamento: new Date().toISOString()
-                    });
-                }
-
-                alert(`✅ Faturamento concluído para NF ${nf}! Enviado para expedição.`);
-                
-                // Reseta e foca novamente no pedido para o próximo
+                await window.addDoc(window.collection(window.db, "atendimentos"), {
+                    pedidoId: pedido,
+                    status: 'INICIADO_FATURAMENTO',
+                    horaInicioFaturamento: new Date().toISOString(),
+                    romaneioId: 'ROM-' + Math.floor(1000 + Math.random() * 9000),
+                    nfId: null
+                });
+                document.getElementById('status-faturista').innerText = `✅ Pedido ${pedido} registrado com sucesso!`;
                 document.getElementById('input-fatura-pedido').value = '';
-                document.getElementById('input-fatura-nf').value = '';
-                document.getElementById('status-faturista').innerText = '';
-                idAtendimentoFaturando = null;
-                document.getElementById('input-fatura-pedido').focus();
-
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao atualizar o faturamento.");
+                document.getElementById('input-fatura-nf').focus(); // Joga o cursor para o campo da NF
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao gravar no Firebase.");
             }
         }
 
-        // --- EXPEDIÇÃO (ROMANEIO VIA CÂMERA) ---
-        function iniciarLeituraRomaneio() {
-            document.getElementById('status-expedicao').innerHTML = 'Aponte a câmera para o QR Code do Romaneio...';
+        async function faturistaFinalizarNF() {
+            const nf = document.getElementById('input-fatura-nf').value.trim();
+            if (!nf) { alert("Bipe ou digite o número da NF!"); return; }
+            if (!window.db) return;
+
+            const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
+            let docId = null;
+            querySnapshot.forEach(docSnap => {
+                if (docSnap.data().status === 'INICIADO_FATURAMENTO' && !docId) docId = docSnap.id;
+            });
+
+            if (!docId) {
+                alert("Nenhum pedido aguardando faturamento encontrado. Faça o check-in do pedido primeiro.");
+                return;
+            }
+
+            const docRef = window.doc(window.db, "atendimentos", docId);
+            await window.updateDoc(docRef, {
+                nfId: nf,
+                status: 'AGUARDANDO_EXPEDICAO',
+                horaFimFaturamento: new Date().toISOString()
+            });
+
+            document.getElementById('status-faturista').innerText = `✅ NF ${nf} salva! Enviado para expedição.`;
+            document.getElementById('input-fatura-nf').value = '';
+        }
+
+        // --- MÓDULO EXPEDIÇÃO (VIA CÂMERA DO CELULAR) ---
+        function iniciarLeituraExpedicao(acao) {
+            document.getElementById('status-expedicao').innerHTML = 'Aponte a câmera do celular...';
             if (!activeScanner) activeScanner = new Html5Qrcode("reader-expedicao");
 
             activeScanner.start(
@@ -310,68 +255,42 @@
                 { fps: 10, qrbox: { width: 250, height: 150 } },
                 async (codigoLido) => {
                     pararCameras();
-                    processarRomaneioExpedicao(codigoLido);
+                    processarAcaoExpedicao(acao, codigoLido);
                 },
                 () => {}
             ).catch(err => alert("Erro ao abrir a câmera. Verifique as permissões."));
         }
 
-        async function processarRomaneioExpedicao(codigo) {
+        async function processarAcaoExpedicao(acao, codigo) {
             if(!window.db) return;
             const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
             let docId = null;
 
-            querySnapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                if (data.status === 'AGUARDANDO_EXPEDICAO' && !docId) docId = docSnap.id;
-            });
+            if (acao === 'romaneio') {
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.status === 'AGUARDANDO_EXPEDICAO' && !docId) docId = docSnap.id;
+                });
+                if (!docId) { alert("Nenhum pedido pronto para separação."); return; }
+                
+                const docRef = window.doc(window.db, "atendimentos", docId);
+                await window.updateDoc(docRef, {
+                    status: 'EM_SEPARACAO',
+                    horaInicioSeparacao: new Date().toISOString()
+                });
+                alert(`📦 Separação iniciada (Romaneio: ${codigo})`);
 
-            if (!docId) { alert("Nenhum pedido pronto para separação encontrado."); return; }
-            
-            const docRef = window.doc(window.db, "atendimentos", docId);
-            await window.updateDoc(docRef, {
-                status: 'EM_SEPARACAO',
-                horaInicioSeparacao: new Date().toISOString()
-            });
-            alert(`📦 Separação iniciada para o Romaneio: ${codigo}`);
-            document.getElementById('status-expedicao').innerHTML = `✅ Romaneio ${codigo} vinculado! Início da carga registrado.`;
-        }
+            } else if (acao === 'fim_carga') {
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.status === 'EM_SEPARACAO' && !docId) docId = docSnap.id;
+                });
+                if (!docId) { alert("Nenhum pedido em separação no momento."); return; }
 
-        // --- EXPEDIÇÃO (FOTO DA NF PARA FINALIZAR E DUPLA CONFERÊNCIA) ---
-        function dispararCameraNF() {
-            document.getElementById('camera-nf-input').click();
-        }
-
-        async function processarFotoNF(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if(!window.db) return;
-            const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
-            let docId = null;
-
-            querySnapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                if (data.status === 'EM_SEPARACAO' && !docId) docId = docSnap.id;
-            });
-
-            if (!docId) { 
-                alert("Nenhum pedido em separação no momento para finalizar."); 
-                return; 
+                document.getElementById('atendimento-id-atual').value = docId;
+                document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+                document.getElementById('screen-avaliacao').classList.remove('hidden');
             }
-
-            const docRef = window.doc(window.db, "atendimentos", docId);
-            await window.updateDoc(docRef, {
-                status: 'AGUARDANDO_AVALIACAO',
-                horaFimCarregamento: new Date().toISOString(),
-                conferenciaFotoRealizada: true
-            });
-
-            alert('📸 Foto da NF capturada! Dupla conferência registrada com sucesso.');
-
-            document.getElementById('atendimento-id-atual').value = docId;
-            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById('screen-avaliacao').classList.remove('hidden');
         }
 
         async function finalizarComAvaliacao() {
@@ -414,11 +333,11 @@
             document.getElementById('tabela-dados').innerHTML = tabelaHTML || '<p class="text-slate-400 text-center py-4">Nenhum atendimento finalizado.</p>';
         }
 
-        export function exportarCSV() {
+        function exportarCSV() {
             if (dadosGlobaisGestao.length === 0) { alert("Não há dados para exportar."); return; }
-            let csvContent = "data:text/csv;charset=utf-8,Pedido,NF,Status,InicioFaturamento,FimFaturamento,InicioSeparacao,FimCarregamento,ConferenciaFoto,Conclusao,NotaTempo,NotaAtendimento\n";
+            let csvContent = "data:text/csv;charset=utf-8,Pedido,NF,Status,InicioFaturamento,FimFaturamento,InicioSeparacao,Conclusao,NotaTempo,NotaAtendimento\n";
             dadosGlobaisGestao.forEach(row => {
-                csvContent += `"${row.pedidoId || ''}","${row.nfId || ''}","${row.status || ''}","${row.horaInicioFaturamento || ''}","${row.horaFimFaturamento || ''}","${row.horaInicioSeparacao || ''}","${row.horaFimCarregamento || ''}","${row.conferenciaFotoRealizada ? 'SIM' : 'NAO'}","${row.horaConclusao || ''}","${row.notaTempo || ''}","${row.notaAtendimento || ''}"\n`;
+                csvContent += `"${row.pedidoId || ''}","${row.nfId || ''}","${row.status || ''}","${row.horaInicioFaturamento || ''}","${row.horaFimFaturamento || ''}","${row.horaInicioSeparacao || ''}","${row.horaConclusao || ''}","${row.notaTempo || ''}","${row.notaAtendimento || ''}"\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
