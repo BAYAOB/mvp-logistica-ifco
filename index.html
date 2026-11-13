@@ -19,8 +19,8 @@
             authDomain: "SEU_PROJETO.firebaseapp.com",
             projectId: "SEU_PROJETO_ID",
             storageBucket: "SEU_PROJETO.appspot.com",
-            messagingSenderId: "SEU_SENDER_ID",
-            appId: "SEU_APP_ID"
+            messagingSenderId: "SUA_SENDER_ID",
+            appId: "SUA_APP_ID"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -75,9 +75,7 @@
             </div>
             <p class="text-sm text-slate-600">Pressione <b>Enter</b> após digitar ou bipar.</p>
             
-            <form onsubmit="faturistaCheckin(event)">
-                <input type="text" id="input-fatura-pedido" placeholder="Nº do pedido..." class="w-full p-4 border-2 border-ifco-green rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition" autocomplete="off">
-            </form>
+            <input type="text" id="input-fatura-pedido" placeholder="Nº do pedido..." class="w-full p-4 border-2 border-ifco-green rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition" autocomplete="off">
             <button onclick="voltarHome()" class="w-full text-slate-400 py-2 text-xs">Cancelar / Voltar ao Menu</button>
         </section>
 
@@ -90,9 +88,7 @@
             <p class="text-sm text-slate-600">Pedido atual: <span id="lbl-pedido-ativo" class="font-bold text-slate-800"></span></p>
             <p class="text-xs text-slate-400">Pressione <b>Enter</b> para finalizar o faturamento.</p>
             
-            <form onsubmit="faturistaFinalizarNF(event)">
-                <input type="text" id="input-fatura-nf" placeholder="Nº da NF..." class="w-full p-4 border-2 border-blue-600 rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition" autocomplete="off">
-            </form>
+            <input type="text" id="input-fatura-nf" placeholder="Nº da NF..." class="w-full p-4 border-2 border-blue-600 rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition" autocomplete="off">
             <button onclick="voltarHome()" class="w-full text-slate-400 py-2 text-xs">Cancelar / Voltar ao Menu</button>
         </section>
 
@@ -200,7 +196,7 @@
             document.getElementById('status-expedicao').innerHTML = '';
         }
 
-        // --- FLUXO FATURISTA (ENTER DE TECLADO OU SCANNER) ---
+        // --- FLUXO FATURISTA (ESCUTA DIRETA DA TECLA ENTER) ---
         function entrarFaturista() {
             pararCameras();
             document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
@@ -214,10 +210,24 @@
             }, 100);
         }
 
-        async function faturistaCheckin(event) {
-            event.preventDefault();
+        // Event listener global para capturar a tecla Enter nos inputs do faturista
+        document.getElementById('input-fatura-pedido').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                faturistaCheckin();
+            }
+        });
+
+        document.getElementById('input-fatura-nf').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                faturistaFinalizarNF();
+            }
+        });
+
+        async function faturistaCheckin() {
             const pedido = document.getElementById('input-fatura-pedido').value.trim();
-            if (!pedido) return;
+            if (!pedido) { alert("Digite ou bipe o número do pedido!"); return; }
             if (!window.db) { alert('Firebase não configurado!'); return; }
 
             try {
@@ -247,10 +257,9 @@
             }
         }
 
-        async function faturistaFinalizarNF(event) {
-            event.preventDefault();
+        async function faturistaFinalizarNF() {
             const nf = document.getElementById('input-fatura-nf').value.trim();
-            if (!nf) return;
+            if (!nf) { alert("Digite ou bipe o número da NF!"); return; }
             if (!window.db || !idAtendimentoFaturando) return;
 
             const docRef = window.doc(window.db, "atendimentos", idAtendimentoFaturando);
