@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Logística - Controle de Pátio IFCO</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca de Leitura de Câmera (QR / Código de Barras) -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Firebase SDK (Modular v9) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // CONFIGURAÇÃO DO FIREBASE (Substitua abaixo com suas chaves gratuitas do Firebase)
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY_AQUI",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            projectId: "SEU_PROJETO_ID",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.updateDoc = updateDoc;
+        window.doc = doc;
+        window.serverTimestamp = serverTimestamp;
+        window.query = query;
+        window.orderBy = orderBy;
+    </script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
+        <h1 class="font-bold text-sm">🚀 MVP Logística - IFCO</h1>
+        <span id="role-badge" class="bg-blue-800 text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">Menu</span>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 mt-2">
+
+        <!-- TELA 0: ESCOLHA DE PERFIL (3 PERFIS) -->
+        <section id="screen-home" class="bg-white p-6 rounded-xl shadow-sm text-center space-y-4">
+            <h2 class="text-xl font-semibold text-slate-700">Controle de Atendimento</h2>
+            <p class="text-sm text-slate-500">Selecione o seu perfil de acesso:</p>
+            
+            <button onclick="mudarPerfil('faturista')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition text-sm shadow">💻 1. Faturamento (PC / Mesa)</button>
+            <button onclick="mudarPerfil('expedicao')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg transition text-sm shadow">📦 2. Expedição / Pátio (Celular)</button>
+            <button onclick="solicitarSenhaGestao()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 rounded-lg transition text-sm shadow">📊 3. Painel de Gestão (Dados)</button>
+        </section>
+
+        <!-- TELA 1: FATURISTA (INICIAR E EMITIR NF) -->
+        <section id="screen-faturista" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
+            <h2 class="text-lg font-bold text-blue-600">Faturamento - Balcão</h2>
+            <p class="text-sm text-slate-600">Bipe o QR Code do recibo do cliente para iniciar o atendimento:</p>
+            
+            <div class="space-y-3">
+                <button onclick="iniciarLeituraFaturista('checkin')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-sm">📷 1. Ler QR Code do Recibo (Iniciar)</button>
+                <button onclick="iniciarLeituraFaturista('nf')" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-3 rounded-lg text-sm">📷 2. Ler Código de Barras da NF (Finalizar NF)</button>
+            </div>
+
+            <div id="reader-faturista" class="w-full rounded-lg overflow-hidden border mt-2"></div>
+            <div id="status-faturista" class="text-xs text-center text-slate-500 font-medium"></div>
+
+            <button onclick="voltarHome()" class="w-full text-slate-500 py-2 text-sm mt-4">Voltar ao Menu</button>
+        </section>
+
+        <!-- TELA 2: EXPEDIÇÃO (SEPARAÇÃO E CARGA) -->
+        <section id="screen-expedicao" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
+            <h2 class="text-lg font-bold text-emerald-600">Expedição - Pátio</h2>
+            <p class="text-sm text-slate-600">Use o celular para registrar o início da separação e o fim da carga:</p>
+            
+            <div class="space-y-3">
+                <button onclick="iniciarLeituraExpedicao('romaneio')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg text-sm shadow">📷 1. Ler QR Code do Romaneio (Início)</button>
+                <button onclick="iniciarLeituraExpedicao('fim_carga')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-sm shadow">📷 2. Ler NF (Fim do Carregamento)</button>
+            </div>
+
+            <div id="reader-expedicao" class="w-full rounded-lg overflow-hidden border mt-2"></div>
+            <div id="status-expedicao" class="text-xs text-center text-slate-500 font-medium"></div>
+
+            <button onclick="voltarHome()" class="w-full text-slate-500 py-2 text-sm mt-4">Voltar ao Menu</button>
+        </section>
+
+        <!-- TELA 3: AVALIAÇÃO DO CLIENTE (ESTRELAS UBER) -->
+        <section id="screen-avaliacao" class="hidden bg-white p-6 rounded-xl shadow-sm text-center space-y-4">
+            <h2 class="text-xl font-bold text-slate-700">Avaliação do Cliente</h2>
+            <p class="text-sm text-slate-500">Como foi a experiência na retirada hoje?</p>
+            <input type="hidden" id="atendimento-id-atual">
+            
+            <div class="space-y-4 py-2">
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-slate-600">Tempo de Espera</label>
+                    <div class="flex justify-center space-x-2 text-3xl cursor-pointer">
+                        <span onclick="setNota('tempo', 1)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('tempo', 2)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('tempo', 3)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('tempo', 4)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('tempo', 5)" class="hover:scale-110 transition">⭐</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-slate-600">Qualidade do Atendimento</label>
+                    <div class="flex justify-center space-x-2 text-3xl cursor-pointer">
+                        <span onclick="setNota('atend', 1)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('atend', 2)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('atend', 3)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('atend', 4)" class="hover:scale-110 transition">⭐</span>
+                        <span onclick="setNota('atend', 5)" class="hover:scale-110 transition">⭐</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="finalizarComAvaliacao()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg text-sm">Enviar Avaliação e Concluir</button>
+        </section>
+
+        <!-- TELA 4: PAINEL DE GESTÃO -->
+        <section id="screen-gestao" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
+            <h2 class="text-lg font-bold text-amber-600">Painel de Indicadores (Gestão)</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-50 p-3 rounded-lg border text-center">
+                    <span class="block text-xs text-slate-500">Atendimentos</span>
+                    <span id="stat-total" class="text-xl font-bold text-blue-600">0</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border text-center">
+                    <span class="block text-xs text-slate-500">Média de Notas</span>
+                    <span id="stat-nota" class="text-xl font-bold text-emerald-600">0.0</span>
+                </div>
+            </div>
+            <div id="tabela-dados" class="space-y-2 max-h-72 overflow-y-auto text-xs">
+                <p class="text-slate-400 text-center py-4">Carregando dados...</p>
+            </div>
+            <button onclick="voltarHome()" class="w-full text-slate-500 py-2 text-sm">Voltar ao Menu</button>
+        </section>
+
+    </main>
+
+    <!-- Script de Regras e Lógica -->
+    <script>
+        let notasAtuais = { tempo: 5, atend: 5 };
+        let activeScanner = null;
+
+        function mudarPerfil(perfil) {
+            pararCameras();
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`screen-${perfil}`).classList.remove('hidden');
+            document.getElementById('role-badge').innerText = perfil;
+
+            if (perfil === 'gestao') carregarGestao();
+        }
+
+        function voltarHome() {
+            pararCameras();
+            mudarPerfil('home');
+        }
+
+        function solicitarSenhaGestao() {
+            const senha = prompt("Digite a senha de Gestão:");
+            if (senha === "1234") { // Senha padrão simples para teste
+                mudarPerfil('gestao');
+            } else if (senha !== null) {
+                alert("Senha incorreta!");
+            }
+        }
+
+        function setNota(tipo, valor) {
+            notasAtuais[tipo] = valor;
+            alert(`Nota de ${tipo === 'tempo' ? 'Tempo de Espera' : 'Atendimento'} ajustada para ${valor} estrelas.`);
+        }
+
+        function pararCameras() {
+            if (activeScanner) {
+                activeScanner.stop().catch(() => {});
+                activeScanner = null;
+            }
+            document.getElementById('status-faturista').innerHTML = '';
+            document.getElementById('status-expedicao').innerHTML = '';
+        }
+
+        // --- MÓDULO FATURISTA ---
+        function iniciarLeituraFaturista(acao) {
+            document.getElementById('status-faturista').innerHTML = 'Aponte a câmera para o código...';
+            if (!activeScanner) activeScanner = new Html5Qrcode("reader-faturista");
+
+            activeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                async (codigoLido) => {
+                    pararCameras();
+                    processarAcaoFaturista(acao, codigoLido);
+                },
+                () => {}
+            ).catch(err => alert("Erro ao abrir a câmera. Verifique as permissões."));
+        }
+
+        async function processarAcaoFaturista(acao, codigo) {
+            if(!window.db) return;
+            const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
+            
+            if (acao === 'checkin') {
+                // Cria novo registro com base no QR Code lido do recibo do cliente
+                await window.addDoc(window.collection(window.db, "atendimentos"), {
+                    pedidoId: codigo,
+                    status: 'INICIADO_FATURAMENTO',
+                    horaInicioFaturamento: window.serverTimestamp(),
+                    romaneioId: 'ROM-' + Math.floor(1000 + Math.random() * 9000),
+                    nfId: null
+                });
+                alert(`✅ Atendimento iniciado para o Pedido/Recibo: ${codigo}`);
+            } else if (acao === 'nf') {
+                // Vincula a NF e marca o fim do faturamento
+                let docId = null;
+                querySnapshot.forEach(docSnap => {
+                    if (docSnap.data().status === 'INICIADO_FATURAMENTO' && !docId) docId = docSnap.id;
+                });
+
+                if (!docId) {
+                    alert("Nenhum atendimento aguardando faturamento no momento.");
+                    return;
+                }
+
+                const docRef = window.doc(window.db, "atendimentos", docId);
+                await window.updateDoc(docRef, {
+                    nfId: codigo,
+                    status: 'AGUARDANDO_EXPEDICAO',
+                    horaFimFaturamento: window.serverTimestamp()
+                });
+                alert(`✅ NF ${codigo} vinculada com sucesso! Enviado para expedição.`);
+            }
+        }
+
+        // --- MÓDULO EXPEDIÇÃO ---
+        function iniciarLeituraExpedicao(acao) {
+            document.getElementById('status-expedicao').innerHTML = 'Aponte a câmera para o documento físico...';
+            if (!activeScanner) activeScanner = new Html5Qrcode("reader-expedicao");
+
+            activeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                async (codigoLido) => {
+                    pararCameras();
+                    processarAcaoExpedicao(acao, codigoLido);
+                },
+                () => {}
+            ).catch(err => alert("Erro ao abrir a câmera."));
+        }
+
+        async function processarAcaoExpedicao(acao, codigo) {
+            if(!window.db) return;
+            const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
+            let docId = null;
+
+            if (acao === 'romaneio') {
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.status === 'AGUARDANDO_EXPEDICAO' && !docId) docId = docSnap.id;
+                });
+
+                if (!docId) { alert("Nenhum pedido pronto para separação."); return; }
+
+                const docRef = window.doc(window.db, "atendimentos", docId);
+                await window.updateDoc(docRef, {
+                    status: 'EM_SEPARACAO',
+                    horaInicioSeparacao: window.serverTimestamp()
+                });
+                alert(`📦 Separação iniciada (Romaneio: ${codigo})`);
+
+            } else if (acao === 'fim_carga') {
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.status === 'EM_SEPARACAO' && !docId) docId = docSnap.id;
+                });
+
+                if (!docId) { alert("Nenhum pedido em separação no momento."); return; }
+
+                const docRef = window.doc(window.db, "atendimentos", docId);
+                await window.updateDoc(docRef, {
+                    status: 'AGUARDANDO_AVALIACAO',
+                    horaFimCarregamento: window.serverTimestamp()
+                });
+
+                // Abre a tela de avaliação direto para o cliente
+                document.getElementById('atendimento-id-atual').value = docId;
+                document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+                document.getElementById('screen-avaliacao').classList.remove('hidden');
+            }
+        }
+
+        async function finalizarComAvaliacao() {
+            const id = document.getElementById('atendimento-id-atual').value;
+            if(!id) { voltarHome(); return; }
+
+            const docRef = window.doc(window.db, "atendimentos", id);
+            await window.updateDoc(docRef, {
+                status: 'CONCLUIDO',
+                notaTempo: notasAtuais.tempo,
+                notaAtendimento: notasAtuais.atend,
+                horaConclusao: window.serverTimestamp()
+            });
+            alert('Atendimento concluído e avaliado com sucesso!');
+            voltarHome();
+        }
+
+        async function carregarGestao() {
+            if(!window.db) return;
+            const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
+            let total = 0, somaNotas = 0, countNotas = 0, tabelaHTML = '';
+
+            querySnapshot.forEach((docSnap) => {
+                const d = docSnap.data();
+                if(d.status === 'CONCLUIDO') {
+                    total++;
+                    const media = ((d.notaTempo + d.notaAtendimento) / 2).toFixed(1);
+                    somaNotas += parseFloat(media);
+                    countNotas++;
+                    tabelaHTML += `<div class="p-2 border-b flex justify-between"><span><b>Pedido:</b> ${d.pedidoId || 'N/A'} (NF: ${d.nfId || 'N/A'})</span><span class="font-bold text-emerald-600">⭐ ${media}</span></div>`;
+                }
+            });
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-nota').innerText = countNotas > 0 ? (somaNotas / countNotas).toFixed(1) : '0.0';
+            document.getElementById('tabela-dados').innerHTML = tabelaHTML || '<p class="text-slate-400 text-center py-4">Nenhum atendimento finalizado.</p>';
+        }
+    </script>
+</body>
+</html>
