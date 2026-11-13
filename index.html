@@ -6,14 +6,14 @@
     <title>MVP Logística - Controle de Pátio IFCO</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca de Leitura de Câmera -->
+    <!-- Biblioteca de Leitura de Câmera (Para o Romaneio) -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // CONFIGURAÇÃO DO FIREBASE (Insira suas chaves)
+        // CONFIGURAÇÃO DO FIREBASE
         const firebaseConfig = {
             apiKey: "SUA_API_KEY_AQUI",
             authDomain: "SEU_PROJETO.firebaseapp.com",
@@ -37,21 +37,20 @@
         window.orderBy = orderBy;
     </script>
     <style>
-        /* Cor Verde Corporativa IFCO */
         .bg-ifco-green { background-color: #007f4f; }
         .text-ifco-green { color: #007f4f; }
         .border-ifco-green { border-color: #007f4f; }
-        .hover:bg-ifco-dark:hover { background-color: #00663f; }
+        .hover\:bg-ifco-dark:hover { background-color: #00663f; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
-    <!-- Header com Logo IFCO e Cor Corporativa -->
+    <!-- Header com Logo IFCO -->
     <header class="bg-ifco-green text-white p-4 shadow-lg flex justify-between items-center">
         <h1 class="font-bold text-sm">MVP Logística</h1>
         <div class="flex items-center gap-3">
             <span id="role-badge" class="bg-white/20 text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">Menu</span>
-            <!-- Logo IFCO Branco no canto -->
+            <!-- Logo IFCO Branco -->
             <svg class="h-6" viewBox="0 0 155 50" xmlns="http://www.w3.org/2000/svg"><path d="M33.8654 8.63999V41.04H24.4574V28.88H10.0094V41.04H0.60142V8.63999H10.0094V20.72H24.4574V8.63999H33.8654ZM69.9409 41.04C63.0329 41.04 57.4169 39.472 53.0929 36.336C48.7689 33.2 46.6069 28.36 46.6069 21.82C46.6069 15.34 48.7389 10.532 53.0029 7.39599C57.2669 4.25999 62.8929 2.69199 69.8809 2.69199C76.8489 2.69199 82.4849 4.28999 86.7889 7.48599C91.0929 10.682 93.2449 15.522 93.2449 22.006C93.2449 28.486 91.0929 33.326 86.7889 36.526C82.4849 39.726 76.8789 41.04 69.9409 41.04ZM69.9409 32.534C73.5449 32.534 76.2889 31.408 78.1729 29.156C80.0569 26.904 80.9989 23.912 80.9989 20.18C80.9989 16.448 80.0569 13.486 78.1729 11.294C76.2889 9.10199 73.5449 8.00599 69.9409 8.00599C66.3369 8.00599 63.5729 9.10199 61.6489 11.294C59.7249 13.486 58.7629 16.478 58.7629 20.47C58.7629 24.398 59.7249 27.372 61.6489 29.392C63.5729 31.408 66.3369 32.534 69.9409 32.534ZM129.56 41.04V33.012L115.052 16.59V41.04H105.704V8.63999H114.752L129.23 25.152V8.63999H138.578V41.04H129.56ZM154.585 41.04C147.677 41.04 142.061 39.472 137.737 36.336C133.413 33.2 131.251 28.36 131.251 21.82C131.251 15.34 133.383 10.532 137.647 7.39599C141.911 4.25999 147.537 2.69199 154.525 2.69199C161.493 2.69199 167.129 4.28999 171.433 7.48599C175.737 10.682 177.889 15.522 177.889 22.006C177.889 28.486 175.737 33.326 171.433 36.526C177.133 39.726 177.889 41.04 154.585 41.04ZM154.585 32.534C158.189 32.534 160.933 31.408 162.817 29.156C164.701 26.904 165.643 23.912 165.643 20.18C165.643 16.448 164.701 13.486 162.817 11.294C160.933 9.10199 158.189 8.00599 154.585 8.00599C150.981 8.00599 148.217 9.10199 146.293 11.294C144.369 13.486 143.407 16.478 143.407 20.47C143.407 24.398 144.369 27.372 146.293 29.392C148.217 31.408 150.981 32.534 154.585 32.534Z" transform="translate(-0.60142 -2.69199)" fill="white"/></svg>
         </div>
     </header>
@@ -63,42 +62,55 @@
             <h2 class="text-xl font-semibold text-slate-700">Controle de Atendimento</h2>
             <p class="text-sm text-slate-500">Selecione o seu perfil de acesso:</p>
             
-            <button onclick="mudarPerfil('faturista')" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">💻 1. Faturamento (PC / Mesa)</button>
+            <button onclick="entrarFaturista()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">💻 1. Faturamento (Mesa - Scanner)</button>
             <button onclick="mudarPerfil('expedicao')" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg transition text-sm shadow">📦 2. Expedição / Pátio (Celular)</button>
             <button onclick="solicitarSenhaGestao()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 rounded-lg transition text-sm shadow">📊 3. Painel de Gestão (Dados)</button>
         </section>
 
-        <!-- TELA 1: FATURISTA -->
-        <section id="screen-faturista" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
-            <h2 class="text-lg font-bold text-ifco-green">Faturamento - Balcão</h2>
-            <p class="text-sm text-slate-600">Bipe o QR Code do recibo ou digite para iniciar:</p>
-            
-            <div class="space-y-3">
-                <input type="text" id="input-pedido-manual" placeholder="Nº do Pedido / Recibo" class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-ifco-green">
-                <button onclick="simularCheckinManual()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-2.5 rounded-lg text-sm">➕ Registrar Chegada / Iniciar</button>
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-4 text-slate-400 text-xs">OU</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-                <button onclick="iniciarLeituraFaturista('checkin')" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2.5 rounded-lg text-sm">📷 Ler QR Code (Câmera)</button>
-                <button onclick="iniciarLeituraFaturista('nf')" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2.5 rounded-lg text-sm">📷 Ler Código de Barras da NF</button>
+        <!-- TELA 1A: FATURISTA - PASSO 1 (PEDIDO) -->
+        <section id="screen-faturista-pedido" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4 text-center">
+            <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                <span class="text-xs font-bold text-ifco-green uppercase tracking-wide">Passo 1 de 2</span>
+                <h2 class="text-lg font-bold text-slate-800">Bipe o Recibo / Pedido</h2>
             </div>
-
-            <div id="reader-faturista" class="w-full rounded-lg overflow-hidden border mt-2"></div>
-            <div id="status-faturista" class="text-xs text-center text-ifco-green font-medium p-1"></div>
-
-            <button onclick="voltarHome()" class="w-full text-slate-500 py-2 text-sm mt-4">Voltar ao Menu</button>
+            <p class="text-sm text-slate-600">O campo está focado. Apenas bipar com a pistola!</p>
+            
+            <form onsubmit="faturistaCheckin(event)">
+                <input type="text" id="input-fatura-pedido" placeholder="Aguardando scanner do pedido..." class="w-full p-4 border-2 border-ifco-green rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition">
+            </form>
+            <button onclick="voltarHome()" class="w-full text-slate-400 py-2 text-xs">Cancelar / Voltar ao Menu</button>
         </section>
 
-        <!-- TELA 2: EXPEDIÇÃO -->
+        <!-- TELA 1B: FATURISTA - PASSO 2 (NOTA FISCAL) -->
+        <section id="screen-faturista-nf" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4 text-center">
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <span class="text-xs font-bold text-blue-600 uppercase tracking-wide">Passo 2 de 2</span>
+                <h2 class="text-lg font-bold text-slate-800">Bipe a Nota Fiscal (NF)</h2>
+            </div>
+            <p class="text-sm text-slate-600">Pedido atual: <span id="lbl-pedido-ativo" class="font-bold text-slate-800"></span></p>
+            
+            <form onsubmit="faturistaFinalizarNF(event)">
+                <input type="text" id="input-fatura-nf" placeholder="Aguardando scanner da NF..." class="w-full p-4 border-2 border-blue-600 rounded-xl text-center text-lg outline-none font-bold bg-slate-50 focus:bg-white transition">
+            </form>
+            <button onclick="voltarHome()" class="w-full text-slate-400 py-2 text-xs">Cancelar / Voltar ao Menu</button>
+        </section>
+
+        <!-- TELA 2: EXPEDIÇÃO (ROMANEIO POR CÂMERA + FOTO DA NF COMO FIM) -->
         <section id="screen-expedicao" class="hidden bg-white p-6 rounded-xl shadow-sm space-y-4">
-            <h2 class="text-lg font-bold text-ifco-green">Expedição - Pátio</h2>
-            <p class="text-sm text-slate-600">Use a câmera para registrar a separação e o fim da carga:</p>
+            <h2 class="text-lg font-bold text-ifco-green">Expedição - Pátio (Celular)</h2>
+            <p class="text-sm text-slate-600">Gerencie a separação e a dupla conferência:</p>
             
             <div class="space-y-3">
-                <button onclick="iniciarLeituraExpedicao('romaneio')" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg text-sm shadow">📷 1. Ler QR Code do Romaneio (Início)</button>
-                <button onclick="iniciarLeituraExpedicao('fim_carga')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-sm shadow">📷 2. Ler NF (Fim do Carregamento)</button>
+                <!-- Botão 1: Ler Romaneio com Câmera -->
+                <button onclick="iniciarLeituraRomaneio()" class="w-full bg-ifco-green hover:bg-ifco-dark text-white font-medium py-3 rounded-lg text-sm shadow">📷 1. Ler QR Code do Romaneio (Início)</button>
+                
+                <!-- Botão 2: Tirar Foto da NF (Fim e Dupla Conferência) -->
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center space-y-2">
+                    <span class="text-xs font-bold text-blue-600 uppercase">2. Fim de Carga & Dupla Conferência</span>
+                    <p class="text-xs text-slate-600">Tire uma foto da Nota Fiscal para comprovar a conferência e finalizar:</p>
+                    <input type="file" id="camera-nf-input" accept="image/*" capture="environment" class="hidden" onchange="processarFotoNF(event)">
+                    <button onclick="dispararCameraNF()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-sm shadow">📸 Tirar Foto da NF Física</button>
+                </div>
             </div>
 
             <div id="reader-expedicao" class="w-full rounded-lg overflow-hidden border mt-2"></div>
@@ -151,10 +163,12 @@
 
     </main>
 
-    <!-- Script de Regras e Lógica -->
+    <!-- Script de Lógica -->
     <script>
         let activeScanner = null;
         let dadosGlobaisGestao = [];
+        let idAtendimentoFaturando = null;
+        let pedidoAtualFaturando = null;
 
         function mudarPerfil(perfil) {
             pararCameras();
@@ -184,78 +198,85 @@
                 activeScanner.stop().catch(() => {});
                 activeScanner = null;
             }
-            document.getElementById('status-faturista').innerHTML = '';
             document.getElementById('status-expedicao').innerHTML = '';
         }
 
-        // --- MÓDULO CHECK-IN MANUAL ---
-        async function simularCheckinManual() {
-            const pedido = document.getElementById('input-pedido-manual').value;
-            if (!pedido) { alert("Digite o número do pedido!"); return; }
-            if(!window.db) { alert('Firebase não configurado!'); return; }
+        // --- FLUXO FATURISTA (ENTER AUTOMÁTICO) ---
+        function entrarFaturista() {
+            pararCameras();
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('screen-faturista-pedido').classList.remove('hidden');
+            document.getElementById('role-badge').innerText = 'Faturista';
+
+            setTimeout(() => {
+                const input = document.getElementById('input-fatura-pedido');
+                input.value = '';
+                input.focus();
+            }, 100);
+        }
+
+        async function faturistaCheckin(event) {
+            event.preventDefault();
+            const pedido = document.getElementById('input-fatura-pedido').value.trim();
+            if (!pedido) return;
+            if (!window.db) { alert('Firebase não configurado!'); return; }
+
             try {
-                await window.addDoc(window.collection(window.db, "atendimentos"), {
+                const docRef = await window.addDoc(window.collection(window.db, "atendimentos"), {
                     pedidoId: pedido,
-                    status: 'INICIADO_FATURAMENTO',
-                    horaInicioFaturamento: new Date().toISOString(),
-                    romaneioId: 'ROM-' + Math.floor(1000 + Math.random() * 9000),
-                    nfId: 'Aguardando'
-                });
-                alert(`✅ Pedido ${pedido} registrado na base!`);
-                document.getElementById('input-pedido-manual').value = '';
-            } catch (e) { console.error(e); alert("Erro ao gravar no Firebase."); }
-        }
-
-        // --- MÓDULO FATURISTA (Leitor Câmera) ---
-        function iniciarLeituraFaturista(acao) {
-            document.getElementById('status-faturista').innerHTML = 'Aponte a câmera...';
-            if (!activeScanner) activeScanner = new Html5Qrcode("reader-faturista");
-
-            activeScanner.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 150 } },
-                async (codigoLido) => {
-                    pararCameras();
-                    processarAcaoFaturista(acao, codigoLido);
-                },
-                () => {}
-            ).catch(err => alert("Erro ao abrir a câmera. Verifique as permissões."));
-        }
-
-        async function processarAcaoFaturista(acao, codigo) {
-            if(!window.db) return;
-            const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
-            
-            if (acao === 'checkin') {
-                await window.addDoc(window.collection(window.db, "atendimentos"), {
-                    pedidoId: codigo,
                     status: 'INICIADO_FATURAMENTO',
                     horaInicioFaturamento: new Date().toISOString(),
                     romaneioId: 'ROM-' + Math.floor(1000 + Math.random() * 9000),
                     nfId: null
                 });
-                alert(`✅ Atendimento iniciado para o Pedido: ${codigo}`);
-            } else if (acao === 'nf') {
-                let docId = null;
-                querySnapshot.forEach(docSnap => {
-                    if (docSnap.data().status === 'INICIADO_FATURAMENTO' && !docId) docId = docSnap.id;
-                });
 
-                if (!docId) { alert("Nenhum atendimento aguardando faturamento encontrado."); return; }
+                idAtendimentoFaturando = docRef.id;
+                pedidoAtualFaturando = pedido;
 
-                const docRef = window.doc(window.db, "atendimentos", docId);
-                await window.updateDoc(docRef, {
-                    nfId: codigo,
-                    status: 'AGUARDANDO_EXPEDICAO',
-                    horaFimFaturamento: new Date().toISOString()
-                });
-                alert(`✅ NF ${codigo} vinculada! Enviado para expedição.`);
+                document.getElementById('screen-faturista-pedido').classList.add('hidden');
+                document.getElementById('screen-faturista-nf').classList.remove('hidden');
+                document.getElementById('lbl-pedido-ativo').innerText = pedido;
+                
+                setTimeout(() => {
+                    const inputNF = document.getElementById('input-fatura-nf');
+                    inputNF.value = '';
+                    inputNF.focus();
+                }, 100);
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao gravar no Firebase.");
             }
         }
 
-        // --- MÓDULO EXPEDIÇÃO (Leitor Câmera) ---
-        function iniciarLeituraExpedicao(acao) {
-            document.getElementById('status-expedicao').innerHTML = 'Aponte a câmera para o documento...';
+        async function faturistaFinalizarNF(event) {
+            event.preventDefault();
+            const nf = document.getElementById('input-fatura-nf').value.trim();
+            if (!nf) return;
+            if (!window.db || !idAtendimentoFaturando) return;
+
+            const docRef = window.doc(window.db, "atendimentos", idAtendimentoFaturando);
+            await window.updateDoc(docRef, {
+                nfId: nf,
+                status: 'AGUARDANDO_EXPEDICAO',
+                horaFimFaturamento: new Date().toISOString()
+            });
+
+            idAtendimentoFaturando = null;
+            pedidoAtualFaturando = null;
+
+            document.getElementById('screen-faturista-nf').classList.add('hidden');
+            document.getElementById('screen-faturista-pedido').classList.remove('hidden');
+            
+            setTimeout(() => {
+                const inputPedido = document.getElementById('input-fatura-pedido');
+                inputPedido.value = '';
+                inputPedido.focus();
+            }, 100);
+        }
+
+        // --- EXPEDIÇÃO (ROMANEIO VIA CÂMERA) ---
+        function iniciarLeituraRomaneio() {
+            document.getElementById('status-expedicao').innerHTML = 'Aponte a câmera para o QR Code do Romaneio...';
             if (!activeScanner) activeScanner = new Html5Qrcode("reader-expedicao");
 
             activeScanner.start(
@@ -263,41 +284,70 @@
                 { fps: 10, qrbox: { width: 250, height: 150 } },
                 async (codigoLido) => {
                     pararCameras();
-                    processarAcaoExpedicao(acao, codigoLido);
+                    processarRomaneioExpedicao(codigoLido);
                 },
                 () => {}
-            ).catch(err => alert("Erro ao abrir a câmera."));
+            ).catch(err => alert("Erro ao abrir a câmera. Verifique as permissões."));
         }
 
-        async function processarAcaoExpedicao(acao, codigo) {
+        async function processarRomaneioExpedicao(codigo) {
             if(!window.db) return;
             const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
             let docId = null;
 
-            if (acao === 'romaneio') {
-                querySnapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data.status === 'AGUARDANDO_EXPEDICAO' && !docId) docId = docSnap.id;
-                });
-                if (!docId) { alert("Nenhum pedido pronto para separação."); return; }
-                const docRef = window.doc(window.db, "atendimentos", docId);
-                await window.updateDoc(docRef, {
-                    status: 'EM_SEPARACAO',
-                    horaInicioSeparacao: new Date().toISOString()
-                });
-                alert(`📦 Separação iniciada (Romaneio: ${codigo})`);
+            querySnapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.status === 'AGUARDANDO_EXPEDICAO' && !docId) docId = docSnap.id;
+            });
 
-            } else if (acao === 'fim_carga') {
-                querySnapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data.status === 'EM_SEPARACAO' && !docId) docId = docSnap.id;
-                });
-                if (!docId) { alert("Nenhum pedido em separação no momento."); return; }
-                // Abre a tela de avaliação
-                document.getElementById('atendimento-id-atual').value = docId;
-                document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
-                document.getElementById('screen-avaliacao').classList.remove('hidden');
+            if (!docId) { alert("Nenhum pedido pronto para separação encontrado."); return; }
+            
+            const docRef = window.doc(window.db, "atendimentos", docId);
+            await window.updateDoc(docRef, {
+                status: 'EM_SEPARACAO',
+                horaInicioSeparacao: new Date().toISOString()
+            });
+            alert(`📦 Separação iniciada para o Romaneio: ${codigo}`);
+            document.getElementById('status-expedicao').innerHTML = `✅ Romaneio ${codigo} vinculado! Início da carga registrado.`;
+        }
+
+        // --- EXPEDIÇÃO (FOTO DA NF PARA FINALIZAR E DUPLA CONFERÊNCIA) ---
+        function dispararCameraNF() {
+            document.getElementById('camera-nf-input').click();
+        }
+
+        async function processarFotoNF(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if(!window.db) return;
+            const querySnapshot = await window.getDocs(window.collection(window.db, "atendimentos"));
+            let docId = null;
+
+            querySnapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.status === 'EM_SEPARACAO' && !docId) docId = docSnap.id;
+            });
+
+            if (!docId) { 
+                alert("Nenhum pedido em separação no momento para finalizar."); 
+                return; 
             }
+
+            // Registra o fim do carregamento e guarda a confirmação da dupla conferência via foto
+            const docRef = window.doc(window.db, "atendimentos", docId);
+            await window.updateDoc(docRef, {
+                status: 'AGUARDANDO_AVALIACAO',
+                horaFimCarregamento: new Date().toISOString(),
+                conferenciaFotoRealizada: true
+            });
+
+            alert('📸 Foto da NF capturada! Dupla conferência registrada com sucesso.');
+
+            // Abre a tela de avaliação direto para o cliente
+            document.getElementById('atendimento-id-atual').value = docId;
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('screen-avaliacao').classList.remove('hidden');
         }
 
         async function finalizarComAvaliacao() {
@@ -305,6 +355,7 @@
             const notaTempo = document.getElementById('range-tempo').value;
             const notaAtend = document.getElementById('range-atend').value;
             if(!id) { alert("Erro: ID não encontrado."); voltarHome(); return; }
+
             const docRef = window.doc(window.db, "atendimentos", id);
             await window.updateDoc(docRef, {
                 status: 'CONCLUIDO',
@@ -341,9 +392,9 @@
 
         function exportarCSV() {
             if (dadosGlobaisGestao.length === 0) { alert("Não há dados para exportar."); return; }
-            let csvContent = "data:text/csv;charset=utf-8,Pedido,NF,Status,InicioFaturamento,FimFaturamento,InicioSeparacao,Conclusao,NotaTempo,NotaAtendimento\n";
+            let csvContent = "data:text/csv;charset=utf-8,Pedido,NF,Status,InicioFaturamento,FimFaturamento,InicioSeparacao,FimCarregamento,ConferenciaFoto,Conclusao,NotaTempo,NotaAtendimento\n";
             dadosGlobaisGestao.forEach(row => {
-                csvContent += `"${row.pedidoId || ''}","${row.nfId || ''}","${row.status || ''}","${row.horaInicioFaturamento || ''}","${row.horaFimFaturamento || ''}","${row.horaInicioSeparacao || ''}","${row.horaConclusao || ''}","${row.notaTempo || ''}","${row.notaAtendimento || ''}"\n`;
+                csvContent += `"${row.pedidoId || ''}","${row.nfId || ''}","${row.status || ''}","${row.horaInicioFaturamento || ''}","${row.horaFimFaturamento || ''}","${row.horaInicioSeparacao || ''}","${row.horaFimCarregamento || ''}","${row.conferenciaFotoRealizada ? 'SIM' : 'NAO'}","${row.horaConclusao || ''}","${row.notaTempo || ''}","${row.notaAtendimento || ''}"\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
